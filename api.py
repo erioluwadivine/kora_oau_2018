@@ -19,6 +19,33 @@ class User(db.Model):
     password = db.Column(db.String(64))
 
 db.create_all()
+@app.route("/signup", methods=["POST"])
+def signup():
+    email = request.json.get("email")
+    username = request.json.get("username")
+    fullname = request.json.get("fullname")
+    phone_no = request.json.get("phone_no")
+    password = request.json.get("password")
+    if username is None or password is None or phone_no is None or email is None or fullname is None:
+        return jsonify({"message":"parameters can not be empty"}),400
+    if User.query.filter_by(username=username).first() is not None:
+        return jsonify({"message":"username already exists"}),400
+    if User.query.filter_by(phone_no=phone_no).first() is not None:
+        return jsonify({"message":"phone number already exists"}),400
+    if User.query.filter_by(email=email).first() is not None:
+         return jsonify({"message":"email already exists"}),400
+    new_user = User(username=username,email=email, password=password, fullname=fullname, phone_no=phone_no)
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"message":
+    {
+        "email": email,
+        "phone_no": phone_no,
+        "username": username,
+        "fullname": fullname,
+        "password": password
+    }
+          }), 201
 
 
 if __name__=="__main__":
