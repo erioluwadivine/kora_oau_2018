@@ -31,6 +31,10 @@ class User(db.Model):
     username = db.Column(db.String(32), index=True)
     phone_no = db.Column(db.String(32), primary_key=True)
     password = db.Column(db.String(64))
+class History(db.model):
+    amount_paid =  db.Column(db.String(32))
+    person_paid =  db.Column(db.String(32))
+    payment_description = db.Column(db.String(32))
 
 db.create_all()
 
@@ -104,8 +108,21 @@ def reset_password_request():
         return jsonify ({"message:":"mail sent"}), 200       
     return jsonify ({"message:":"something is not right please check you email or internet connectivity"}), 400     
 
-
-
+@app.route('/pay', methods=["POST"])
+def pay():
+    amount_paid =  request.json.get("amount_paid")
+    person_paid =  request.json.get("person_paid")
+    payment_description = request.json.get("payment_description")
+    submit_history = History(amount_paid=amount_paid, person_paid=person_paid,payment_description=payment_description)
+    db.session.add(submit_history)
+    db.session.commit()
+    return jsonify({"message":
+    {
+        "amount_paid": amount_paid,
+        "person_paid": person_paid,
+        "payment_description":payment_description,
+    }
+          }), 201
 
 if __name__=="__main__":
     app.run()
