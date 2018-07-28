@@ -47,6 +47,24 @@ def signup():
     }
           }), 201
 
+@app.route("/login", methods=["POST"])
+def login ():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    if username is None or password is None:
+        abort(400)
+    existing_user = User.query.filter_by(username=username, password=password).first()
+    if not existing_user:
+        return (jsonify({"message":"incorect username or password"})), 404
+    return (jsonify({"message":
+    {
+        "username": username,
+        "password": password
+    }
+    })), 200
+
+
+
 
 if __name__=="__main__":
     app.run() 
