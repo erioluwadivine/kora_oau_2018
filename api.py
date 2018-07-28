@@ -9,7 +9,21 @@ import random
 
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ["DATABASE_URL"]
+app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
+app.config.update(dict(
+    DEBUG = True,
+    MAIL_SERVER = 'smtp.gmail.com',
+    MAIL_PORT = 465,
+    MAIL_USE_TLS = False,
+    MAIL_USE_SSL = True,
+    MAIL_USERNAME = 'divineayomi@gmail.com',
+    MAIL_PASSWORD = 'erioluwa',
+))
+api = swagger.docs(Api(app), apiVersion='0.1')
 db = SQLAlchemy(app)
+mail = Mail(app)
+mail.init_app(app)
 class User(db.Model):
     # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     email = db.Column(db.String(32), primary_key=True)
@@ -19,6 +33,7 @@ class User(db.Model):
     password = db.Column(db.String(64))
 
 db.create_all()
+
 @app.route("/signup", methods=["POST"])
 def signup():
     email = request.json.get("email")
@@ -64,7 +79,33 @@ def login ():
     })), 200
 
 
+def randpass():
+    new = (random.randint (1000, 9000))
+    return new
+
+
+@app.route('/reset', methods=["POST"])
+def reset_password_request():
+    email = request.json.get("email")
+    client = User.query.filter_by(email=email).first()
+    if client:
+        new_pass = (random.randint (1000, 9000))
+        print(new_pass)
+        User.query.filter_by(email=email).update({
+            'email': email,
+            'password': new_pass})
+        db.session.commit()
+        msg = Message('Reset your password',
+                sender="divineayomi@gmail.com",
+                recipients=[email],
+                body="your new password is " + str(new_pass)
+                )       
+        mail.send(msg)
+        return jsonify ({"message:":"mail sent"}), 200       
+    return jsonify ({"message:":"something is not right please check you email or internet connectivity"}), 400     
+
+
 
 
 if __name__=="__main__":
-    app.run() 
+    app.run()
